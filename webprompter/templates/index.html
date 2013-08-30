@@ -1,0 +1,99 @@
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Teleprompter Web App</title>
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/overcast/jquery-ui.css"/>
+    <link rel="stylesheet" href="{% static "css/style.css" %}" />
+ </head>
+
+  <body>
+    <div id="content" contenteditable="">Replace this content...</div>
+    <div class="message" id="help">Press F11 on Windows or Command-Shift-F on Mac to enter fullscreen mode in chrome.<br />
+      If you are not using chrome, I can't help you. (Hover over this message to remove it.)</div>
+    <div id="warning" class="message"></div>
+    <div id="toolbar-sensor" class="sensor">
+      <div id="toolbar" class="toolbar">
+	<div id="buttons" class="left-buttons">
+	  <span id="font-size">Font Size:
+	    <button id="size-plus">Larger</button>
+	    <button id="size-minus">Smaller</button>
+	  </span>
+	  <span id="margin" class="left-padding">Margins:
+	    <!--<button id="margin-button">Edit Margins</button>-->
+	    <span id="margin-cont">
+	      <div id="margin-slider" class="slider"></div>
+	    </span>
+	  </span>
+	  <span class="right buttons">
+	    <button id="more" title="Open File Menu">[File]</button>
+	    <input type="checkbox" id="disable-edits" />
+	    <label for="disable-edits" title="Also disables manual scrolling...">
+	      Disable Editing</label>
+	    <span id="playback" class="left-padding">
+	      <button id="speed-down">Decrease Speed</button>
+	      <input type="checkbox" id="play" />
+	      <label for="play" id="play-label">Play/Pause</label>
+	      <button id="speed-up">Increase Speed</button>
+	    </span>
+	  </span>
+	</div>
+      </div>
+    </div>
+    <div id="dimensions" class="message"></div>
+    <div id="rich-sensor" class="sensor">
+      <div id="rich" class="toolbar">
+	<div id="rich-buttons" class="left-buttons">
+	  <span id="text-style">
+	    <button id="bold" title="Bold"><b>B</b></button>
+	    <button id="italic" title="Italic"><i>I</i></button>
+	    <button id="underline" title="Italic"><u>U</u></button>
+	  </span>
+	  <span class="right buttons">
+	  </span>
+	</div>
+      </div>
+    </div>
+    <div id="dialogs" class="hide">
+      <div id="more-dialog" title="File Menu">
+	<button id="new-script">New Script</button>
+	<button id="open-server">Save or Load to the Server</button>
+	<button id="close-menu">Close</button>
+      </div>
+      <div id="server" title="Save or Open Online">
+	<div>Enter the filename and password to save or load with. You may leave the password blank.</div>
+	<div id="server-form-warning" class="ui-state-error ui-corner-all hide"></div>
+	<div id="server-form">
+	  <fieldset>
+	    <legend>Name</legend>
+	    <input name="name" id="filename" />
+	  </fieldset>
+	  <fieldset>
+	    <legend>Password</legend>
+	    <input name="password" id="password" type="password" />
+	  </fieldset>
+	  <fieldset class="hide" id="extra-password">
+	    <legend>Old Password</legend>
+	    Press save again to replace the existing file, unless you changed the password, in which case you need to input the old password here. If you are using the same password, you do not need to use this field.
+	    <input name="replace" id="replace-password" type="password" />
+	  </fieldset>
+	</div>
+	<div id="server-working" class="hide server-message">
+	  <img id="loading" alt="Loading..." src="{% static "img/loading.gif" %}" />
+	  Processing...
+	</div>
+	<div id="server-finished" class="hide server-message">
+	  <big><strong>Request Successful!</strong></big>
+	</div>
+      </div>
+    </div>
+  </body>
+  
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+  <script>var staticPath = "{% static "" %}";</script>
+  <script src="{% static "js/rangy/my-rangy.js" %}"></script>
+  <script src="{% static "js/plugins.js" %}"></script>
+  <script src="{% static "js/script.js" %}"></script>
+</html>

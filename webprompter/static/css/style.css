@@ -1,0 +1,169 @@
+#content {
+    font-size: 64px;
+    margin-top: 30%;
+    min-height: 60%;
+    white-space: pre-wrap;
+}
+
+#content a {
+    color: #FFF;
+}
+
+.message {
+    position: fixed;
+    color: #0AF;
+    box-shadow: 0 0 4px grey;
+    border-radius: 3px;
+    background: rgba(96,96,96,0.8);
+    z-index: 99;
+    width: 60%; margin: 0 20%;
+    top: 160px;
+    font-size: 1.2em;
+    text-align: center;
+}
+
+#warning {
+    color: #FF0;
+}
+
+#dimensions {
+    color: #64F;
+    font-size: 1.5em;
+    font-weight: bold;
+    top: auto;
+    bottom: 80px;
+}
+
+.ui-widget {
+    font-size: 1em;
+}
+
+.left-padding {
+    margin-left: 10px;
+}
+
+.hide { display: none; }
+.left { float: left; }
+.right { float: right; }
+span.right.buttons {
+    padding: 1px 2px; }
+
+body {
+    overflow-x: hidden;
+    background-color: #000;
+    color: #FFF;
+    font-family: Sans-Serif;
+/*    overflow: hidden; */
+}
+
+@media print {
+    body {
+	background-color: #FFF;
+	color: #000;
+    }
+    #content {
+	margin: 10px !important;
+	font-size: 0.95em !important;
+    }
+    .message, .sensor {
+	display: none;
+    }
+}
+
+.ui-tooltip-content {
+    font-size: 0.8em;
+}
+
+.sensor {
+    cursor: auto;
+    width: 100%;
+    opacity: 1;
+    height: 120px;
+    position: fixed;
+    z-index: 999;
+    left: 0;
+}
+#toolbar-sensor { top: 0; }
+#rich-sensor { bottom: -10px; }
+
+#more-dialog button {
+    width: 98%;
+}
+
+.left-buttons {
+    margin: 3 10px;
+}
+
+.slider {
+    display: inline-block !important;
+    width: 200px;
+    margin: 0 16px;
+}
+
+#server-form input {
+    width: 100%;
+}
+
+#server-form-warning {
+    padding: 2px;
+}
+
+.server-message {
+    margin-top: 4%;
+    text-align: center;
+}
+
+#loading {
+    display: block;
+    margin: auto;
+    width: 220px;
+    height: 19px;
+}
+
+.toolbar {
+    cursor: auto;
+    color: #000;
+    min-width: 800px;
+    width: 80%;
+    position: fixed;
+    left: 10%;
+    height: 48px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px black;
+    background: -webkit-linear-gradient(top, rgba(255,255,255,1) 0%,
+					rgba(229,229,229,1) 100%);    
+}
+#toolbar { top: 30px; }
+#rich { bottom: 30px; }
+
+.ui-dialog, .ui-widget-overlay {
+    cursor: auto !important;
+}
+
+#content p {
+    margin: 0 !important;
+}
+
+@media (max-width: 1054px) {
+  /* rules that only apply for canvases narrower than 1000px */
+    .toolbar {
+	min-width: 0;
+	width: 98%;
+	left: 1%;
+	font-size: 0.8em;
+	height: 41px;
+    }
+}
+
+.reset-formatting {
+    font-weight: normal;
+    font-style: normal;
+    text-decoration: none;
+}
+
+.bold { font-weight: bold; }
+.italic { font-style: italic; }
+.underline { text-decoration: underline; }
+.left-align { text-align: left; }
+.right-align { text-align: right; }
+.center-align { text-align: center; }
