@@ -1,14 +1,98 @@
-d = {};
-d.speed = 10;
-d.doScroll = 9;
-d.playing = false;
-d.intervals = {};
-
-window.onbeforeunload = function() {
-    return "Are you sure you want to leave the teleprompter? Your work will be saved when you return.";
+if (document.fullscreenEnabled) {
+    var isFullscreen = "isFullscreen";
+    var fullscreenchange = "fullscreenchange";
+} else if (document.webkitFullscreenEnabled) {
+    Element.prototype.requestFullscreen = Element.prototype.webkitRequestFullScreen;
+    document.cancelFullscreen = document.webkitCancelFullScreen;
+    var isFullscreen = "webkitIsFullScreen";
+    var fullscreenchange = "webkitfullscreenchange";
+} else if (document.mozFullscreenEnabled) {
+    Element.prototype.requestFullscreen = Element.prototype.mozRequestFullScreen;
+    document.cancelFullscreen = document.mozCancelFullScreen;
+    var isFullscreen = "mozIsFullScreen";
+    var fullscreenchange = "mozfullscreenchange";
+} else {
+    alert("Fullscreen APIs not present, please use a different browser or contact support.");
 }
 
-$(function(){
+var fonts = [
+    'Arial, Helvetica, sans-serif',
+    '"Arial Black", Gadget, sans-serif',
+    '"Comic Sans MS", cursive, sans-serif',
+    'Impact, Charcoal, sans-serif',
+    '"Lucida Sans Unicode", "Lucida Grande", sans-serif',
+    'Tahoma, Geneva, sans-serif',
+    '"Trebuchet MS", Helvetica, sans-serif',
+    'Verdana, Geneva, sans-serif',
+    'Georgia, serif',
+    '"Times New Roman", Times, serif',
+    '"Courier New", Courier, monospace',
+    '"Lucida Console", Monaco, monospace'
+];
+
+function Prompter() {
+
+    if (localStorage.prompter) {
+	try {
+	    $.extend(this,JSON.parse(localStorage.prompter));
+	} catch (err) { }
+    }
+
+    this.el = $("#content");
+
+    this.isScrolling = false;
+    document.addEventListener(fullscreenchange,this.fullscreenChange.bind(this));
+
+    $(document).mousewheel((function(e,delta){
+	if (this.isScrolling) {
+	    d.speed += (delta+(delta>0?1:-1))/2;
+	    checkSpeed();
+	    e.preventDefault();
+	}
+    }).bind(this));
+
+    $("#start").button().click(this.startScrolling.bind(this));
+    $("#preview").button().click(this.startScrolling.bind(this,"preview"));
+
+    var colorOpts = {
+	showPalette: ["black","white","blue","red"],
+	showButtons: false
+    };
+    $("#text-color").spectrum($.extend({
+	color: this.textColor,
+	localStorageKey: "prompterTextColorSelections",
+	move: this.setColor.bind(this,"text")
+    },colorOpts));
+    $("#bg-color").spectrum($.extend({
+	color: this.bgColor,
+	localStorageKey: "prompterBGColorSelections",
+	move: this.setColor.bind(this,"bg")
+    },colorOpts));
+    this.setColor();
+
+    $("#size-plus").button({
+	icons: { "primary": "ui-icon-plusthick"  }
+    }).click(this.changeFontSize.bind(this,"+"));
+    $("#size-minus").button({
+	icons: { "primary": "ui-icon-minusthick"  }
+    }).click(this.changeFontSize.bind(this,"-"));
+    this.changeFontSize();
+
+    $("#font").change(this.changeFont.bind(this));
+    for (i=0;i<fonts.length;i++) {
+	$("<option>").val(fonts[i]).text(fonts[i].split(",")[0].replace(/"/g,""))
+	    .appendTo("#font"); }
+    this.changeFont();
+
+    $(".buttonset").buttonset();
+
+    //// CODE STILL NEEDS TO BE REFACTORED \/ \/ \/ ////
+
+    d = {};
+    d.speed = 10;
+    d.doScroll = 9;
+    d.playing = false;
+    d.intervals = {};
 
     function setup(obj) {
 	localStorage.prompterEditable = obj.prompterEditable;
@@ -38,13 +122,6 @@ $(function(){
 	adjustMargins({}, {values: storedMargins});
 	$("#margin-slider").slider("option","values",storedMargins);
     }		   
-
-    function warn(msg,timeout) {
-	if (d.warnTimeout) {
-	    clearTimeout(d.warnTimeout); }
-	if (!timeout) { timeout = 2000; }
-	$("#warning").clearQueue().html(msg).fadeIn(200).delay(timeout).fadeOut(500);
-    }
     $(window).resize(function(e){
 	if (d.dimensionsTimeout) {
 	    clearTimeout(d.dimensionsTimeout); }
@@ -58,7 +135,7 @@ $(function(){
 	},1000);
     });
 
-    $("#disable-edits").get(0).checked = localStorage.prompterEditable == "0";
+    //$("#disable-edits").get(0).checked = localStorage.prompterEditable == "0";
     function changeEditable(){
 	$("#content").get(0).contentEditable = 
 	    (localStorage.prompterEditable=="0"?"false":"true");
@@ -130,8 +207,8 @@ $(function(){
 		d.speed = 0; break; }
 	    d.speed += 1; break;
 	case 32: // Space Key
-	    if (!$("#more-dialog").dialog("isOpen")) {
-		$("#play-label").click(); }
+	    //if (!$("#more-dialog").dialog("isOpen")) {
+	    d.playing = !d.playing;
 	    if (d.playing && d.speed == 0) {
 		d.speed = 1;
 		checkSpeed();
@@ -143,93 +220,7 @@ $(function(){
 	checkSpeed();
 	e.preventDefault();
 	return false;
-    }).mousewheel(function(e,delta){
-	if (localStorage.prompterEditable === "0") {
-	    d.speed += (delta+(delta>0?1:-1))/2;
-	    checkSpeed();
-	    e.preventDefault();
-	}
     });
-
-    $("#toolbar-sensor").tooltip({
-	position: { my: "center bottom-4", at: "center top"}
-    }).hoverIntent({
-	over: function(e){
-	    $("#toolbar").clearQueue().animate({"top":30,opacity:1},200);
-	},
-	out: function(e){
-	    $("#margin-slider a.ui-state-focus").blur();
-	    $("#toolbar").animate({"top":-56,opacity:1},500);
-	},
-	timeout: 200,
-	interval: 30
-    });
-    $("#rich-sensor").tooltip({
-	position: { my: "center top+4", at: "center bottom"}
-    }).hoverIntent({
-	over: function(e){
-	    if (localStorage.prompterEditable !== "0") {
-		$("#rich").clearQueue().animate({"bottom":30,opacity:1},200); }
-	},
-	out: function(e){
-	    $("#rich").animate({"bottom":-56,opacity:1},500);
-	},
-	timeout: 200,
-	interval: 30
-    });
-
-    $("#disable-edits").button({
-	icons: { secondary: "ui-icon-pencil" }
-    }).click(function(e){
-	localStorage.prompterEditable = Number(!this.checked);
-	changeEditable();
-    });
-
-    // Playback controls...
-    $("#speed-down").button({
-	text: false,
-	icons: { "primary": "ui-icon-seek-prev"  }
-    }).click( function(e){
-	d.speed -= 1;
-	checkSpeed();
-    });
-    $("#speed-up").button({
-	text: false,
-	icons: { "primary": "ui-icon-seek-next"  }
-    }).click( function(e){
-	d.speed += 1;
-	checkSpeed();
-    });
-    $("#play").button({
-	text: false,
-	icons: { "primary": "ui-icon-play"  }
-    });
-    $("#play-label").click( function(e){
-	d.playing = !d.playing;
-	$("#toolbar-sensor").tooltip("option","disabled",d.playing);
-	icon = d.playing?"ui-icon-pause":"ui-icon-play";
-	$("#play").prop("checked",d.playing).button("refresh")
-	    .button("option","icons",
-		    {"primary":icon} );
-	$("#disable-edits").button("option","disabled",d.playing);
-    });
-    $("#playback").buttonset();
-
-    $("#size-plus").button({
-	text: false,
-	icons: { "primary": "ui-icon-plusthick"  }
-    }).click( function(e){
-	$("#content").css("fontSize","+=4");
-	localStorage.prompterSize = $("#content").css("fontSize");
-    });
-    $("#size-minus").button({
-	text: false,
-	icons: { "primary": "ui-icon-minusthick"  }
-    }).click( function(e){
-	$("#content").css("fontSize","-=4");
-	localStorage.prompterSize = $("#content").css("fontSize");
-    });
-    $("#font-size").buttonset();
     
     rangy.init();
     resetApplier = rangy.createCssClassApplier("reset-formatting",
@@ -271,18 +262,9 @@ $(function(){
 					 "paddingRight": 0,
 					 "overflow": "hidden" })
 	    .delay(1500)
-	    .animate({"borderColor": "transparent"},1000)/*.delay(1000)
-							   .animate({ "marginRight": 0, "overflow": "scroll",
-							   "paddingRight": margins.right+"%"
-							   },10)*/;
+	    .animate({"borderColor": "transparent"},1000);
 	setTimeout(function(){ $("#toolbar").focus(); },500);
     }
-    
-    $("#margin-slider").slider({
-	range: true,
-	min: 0, max: 100,
-	slide: adjustMargins
-    });
 
     function moveText() {
 	if (d.playing && testForDialogs() && Math.abs(d.doScroll) > 1000 ) {
@@ -308,164 +290,118 @@ $(function(){
     });
 
     $("#more").button({
-	text: false,
 	icons: { primary: "ui-icon-disk" }
     }).click(function(){
 	$("#more-dialog").dialog("open");
-    });
-    
-    function serverWarn(message){
-	$("#server-form-warning").text(message)
-	    .clearQueue().show("blind").delay(1500).hide("blind"); }
-
-    d.allowServerClose = true;
-    function readServerFormAndPrep(){
-	if (!d.allowServerClose) {
-	    serverWarn("Please wait until the current operation is finished!");
-	    return false;
-	}
-	name = $("#filename").val();
-	password = $("#password").val();
-	if (!name) {
-	    serverWarn("Please provide a filename to save or load!");
-	    return false;
-	} else {
-	    d.allowServerClose = false;
-	    $("#server-working").fadeIn(500);
-	    return { name:name, password:password };
-	}
-    }
-    function serverRequestComplete(){
-	d.allowServerClose = true;
-	$("#server-working").fadeOut(500);
-    }
-
-    dialogEffect =  {effect:"drop",direction:"up",duration:500};
-    dialogOptions = {
-	autoOpen: false, closeOnEscape: true,
-	modal: true, draggable: false, resizable: false,
-	show: dialogEffect, hide: dialogEffect,
-	position: {my:"center top", at:"center bottom", of:"#toolbar-sensor"},
-	zIndex: 100
-    }
-    $("#more-dialog").dialog(dialogOptions);
-    $("#server").dialog(dialogOptions).dialog("option", {
-	open: function() { $(".server-message,#server-form-warning").hide() },
-	close: function() { d.replaceSave = false; $("#extra-password").hide(); },
-	beforeClose: function() {
-	    if (!d.allowServerClose) {
-		serverWarn("Please wait until the current request is done!");
-	    }
-	    return d.allowServerClose;
-	},
-	width: 600, height: 450,
-	buttons: {
-	    "Save": function() {
-		info = readServerFormAndPrep();
-		if (!info) { return false; }
-		info.data = JSON.stringify({
-		    prompterEditable: localStorage.prompterEditable,
-		    prompterText: $("#content").html(),
-		    prompterSpeed: d.speed,
-		    prompterSize: localStorage.prompterSize,
-		    prompterMargins: localStorage.prompterMargins
-		});
-		if (d.replaceSave) {
-		    info.replace = $("#replace-password").val();
-		}
-		$.ajax({
-		    url: "php/save.php",
-		    data: info,
-		    dataType: "json",
-		    type: "POST",
-		    success: function(data,status) {
-			serverRequestComplete();
-			if (!data.success) {
-			    if (data.error == "Incorrect password to replace!") {
-				serverWarn("The old password you inputted was incorrect. Please try again.");
-			    } else if (data.error.substr(0,16) == "Duplicate entry ") {
-				serverWarn("A file with this name already exists.");
-				$("#extra-password").fadeIn(500);
-				d.replaceSave = true;
-			    } else {
-				serverWarn("Request failed: "+data.error);
-			    }
-			}
-			else {
-			    serverRequestComplete();
-			    d.replaceSave = false;
-			    $("#extra-password").hide();
-			    $("#server-finished").fadeIn(500);
-			    setTimeout(function(){
-				$("#server").dialog("close");
-			    },1000);
-			    localStorage.prompterDirty = 0;
-			}
-		    }
-		}).error( function(xhr,status,error) {
-		    serverRequestComplete();
-		    serverWarn("Request failed: "+error);
-		});
-	    },
-	    "Load": function() {
-		info = readServerFormAndPrep();
-		if (!info) { return false; }
-		$.ajax({
-		    url: "php/load.php",
-		    data: info,
-		    dataType: "json",
-		    type: "POST",
-		    success: function(data,status) {
-			serverRequestComplete();
-			if (!data.success) {
-			    serverWarn("Request failed: "+data.error); }
-			else {
-			    $("#server-finished").fadeIn(500);
-			    setup(JSON.parse(data.data));
-			    setTimeout(function(){
-				$("#server").dialog("close");
-			    },1000);
-			    localStorage.prompterDirty = 0;
-			}
-		    }
-		}).error( function(xhr,status,error) {
-		    serverRequestComplete();
-		    serverWarn("Request failed: "+error);
-		});
-	    },
-	    "Cancel": function() { $("#server").dialog("close"); }
-	}
     });
 
     function closeMenu() {
 	$("#more-dialog").dialog("close"); }
     menuButtons = ["ui-icon-document", "ui-icon-transferthick-e-w", "ui-icon-closethick"];
-    menuActions = [ function(){
-	if (localStorage.prompterDirty=="0" || confirm("Are you sure you want to clear the current script (without saving!) and create a new one?")) {
-	    $("#content").html("");
-	    if (d.playing) {
-		$("#play-label").click(); }
-	    $("#disable-edits").get(0).checked=false; $("#disable-edits").button("refresh");
-	    localStorage.prompterEditable = 1;
-	    changeEditable();
-	    newMargins = [0,100];
-	    $("#margin-slider").slider("values",newMargins);
-	    adjustMargins({},{values:newMargins});
-	    localStorage.prompterDirty=0;
+    menuActions = [
+	function(){
+	    if (localStorage.prompterDirty=="0" || confirm("Are you sure you want to clear the current script (without saving!) and create a new one?")) {
+		$("#content").html("");
+		if (d.playing) {
+		    $("#play-label").click(); }
+		$("#disable-edits").get(0).checked=false; $("#disable-edits").button("refresh");
+		localStorage.prompterEditable = 1;
+		changeEditable();
+		newMargins = [0,100];
+		$("#margin-slider").slider("values",newMargins);
+		adjustMargins({},{values:newMargins});
+		localStorage.prompterDirty=0;
+		closeMenu();
+		$("#content").focus();
+	    }
+	},
+	function(){
 	    closeMenu();
-	    $("#content").focus();
-	}
-    },
-		    function(){
-			closeMenu();
-			$("#server").dialog("open");
-		    },
-		    closeMenu ];
+	    $("#server").dialog("open");
+	},
+	closeMenu ];
     $("#more-dialog button").each( function(index,el) {
 	$(el).button({ icons: {primary: menuButtons[index]} }).click(menuActions[index]);
     });
     
     setup(localStorage);
     d.intervals.moveText = setInterval(moveText,1);
+/*window.onbeforeunload = function() {
+// only if presenting
+    return "Are you sure you want to leave the teleprompter? Your work will be saved when you return.";
+}*/
+
+};
+
+Prompter.prototype = {
+    startScrolling: function(preview) {
+	if (preview === "preview") {
+	    if (document[isFullscreen]) {
+		document.cancelFullscreen();
+	    } else {
+		this.root.addClass("preview");
+	    }	    
+	} else {
+	    this.root.removeClass("preview");
+	    this.warn("Press &lt;Escape&gt; to stop prompting.");
+	}
+	this.root.get(0).requestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+    },
+    fullscreenChange: function(e) {
+	this.isScrolling = document[isFullscreen];
+	this.el.prop("contentEditable",!this.isScrolling);
+	$(document.body).css("overflow-y",this.isScrolling?"hidden":"auto");
+	$("#text-style button").button("option","disabled",this.isScrolling);
+	if (this.isScrolling) {
+	} else {
+	    this.root.removeClass("preview");
+	}
+    },
+    setColor: function(of,color) {
+	if (of) {
+	    c = color.toHexString();
+	    this[of+"Color"] = c;
+	    if (of == "text") {
+		this.el.css("color",c);
+	    } else if (of == "bg") {
+		this.root.css("background-color",c);
+	    }
+	} else {
+	    this.el.css("color",this.textColor);
+	    this.root.css("background-color",this.bgColor);
+	}
+	this.save();
+    },
+    changeFontSize: function(sign,e) {
+	this.el.css("fontSize",sign?sign+"=4":this.fontSize);
+	this.fontSize = this.el.css("fontSize");
+	this.save();
+    },
+    changeFont: function(e) {
+	if (!e) {
+	    $("#font").val(this.font); }
+	this.el.css("fontFamily",$("#font").val())
+	this.font = $("#font").val();
+	this.save();
+    },
+    save: function() {
+	localStorage.prompter = JSON.stringify(this,[
+	    "font","fontSize","textColor","bgColor"
+	]);
+    },
+    warn: function(msg,timeout) {
+	if (!timeout) { timeout = 2000; }
+	$("#warning").stop(true,true).html(msg).fadeIn(200).delay(timeout).fadeOut(500);
+    },
+    root: $(document.documentElement),
+    fontSize: "64px",
+    font: fonts[0],
+    textColor: "black",
+    bgColor: "white"
+};
+
+$(function(){
+
+    p = new Prompter();
 
 });

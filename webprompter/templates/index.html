@@ -1,67 +1,62 @@
 {% load staticfiles %}
 
+<!-- speed, margins, import doc. formats -->
+
 <!DOCTYPE html>
 <html>
   <head>
     <title>Teleprompter Web App</title>
     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/overcast/jquery-ui.css"/>
+    <link rel="stylesheet" href="{% static "css/spectrum.css" %}" />
     <link rel="stylesheet" href="{% static "css/style.css" %}" />
  </head>
 
   <body>
     <div id="content" contenteditable="">Replace this content...</div>
-    <div class="message" id="help">Press F11 on Windows or Command-Shift-F on Mac to enter fullscreen mode in chrome.<br />
-      If you are not using chrome, I can't help you. (Hover over this message to remove it.)</div>
     <div id="warning" class="message"></div>
-    <div id="toolbar-sensor" class="sensor">
+    <div id="toolbars">
       <div id="toolbar" class="toolbar">
 	<div id="buttons" class="left-buttons">
-	  <span id="font-size">Font Size:
-	    <button id="size-plus">Larger</button>
-	    <button id="size-minus">Smaller</button>
+	  <span class="buttonset">
+	    <button class="size-button" id="size-plus">Size</button>
+	    <button class="size-button" id="size-minus">Size</button>
 	  </span>
-	  <span id="margin" class="left-padding">Margins:
-	    <!--<button id="margin-button">Edit Margins</button>-->
-	    <span id="margin-cont">
-	      <div id="margin-slider" class="slider"></div>
-	    </span>
+	  <span class="buttonset">
+	    <button class="color-button" id="text-color">Text Color</button>
+	    <button class="color-button" id="bg-color">Background Color</button>
 	  </span>
+
 	  <span class="right buttons">
-	    <button id="more" title="Open File Menu">[File]</button>
-	    <input type="checkbox" id="disable-edits" />
-	    <label for="disable-edits" title="Also disables manual scrolling...">
-	      Disable Editing</label>
-	    <span id="playback" class="left-padding">
-	      <button id="speed-down">Decrease Speed</button>
-	      <input type="checkbox" id="play" />
-	      <label for="play" id="play-label">Play/Pause</label>
-	      <button id="speed-up">Increase Speed</button>
-	    </span>
+	    <button id="preview">Fullscreen</button>
+	    <button id="start">START</button>
 	  </span>
 	</div>
       </div>
-    </div>
-    <div id="dimensions" class="message"></div>
-    <div id="rich-sensor" class="sensor">
       <div id="rich" class="toolbar">
 	<div id="rich-buttons" class="left-buttons">
-	  <span id="text-style">
+	  <select id="font">
+	  </select>
+	  <span id="text-style" class="buttonset">
 	    <button id="bold" title="Bold"><b>B</b></button>
 	    <button id="italic" title="Italic"><i>I</i></button>
 	    <button id="underline" title="Italic"><u>U</u></button>
 	  </span>
 	  <span class="right buttons">
+	    <button id="margin-button">Edit Margins</button>
+	    <button id="more" title="Open File Menu">Menu</button>
 	  </span>
 	</div>
       </div>
     </div>
+    <div id="dimensions" class="message"></div>
     <div id="dialogs" class="hide">
       <div id="more-dialog" title="File Menu">
 	<button id="new-script">New Script</button>
-	<button id="open-server">Save or Load to the Server</button>
+	<button id="save-server">Save to the Server</button>
+	<button id="load-server">Load from the Server</button>
 	<button id="close-menu">Close</button>
       </div>
-      <div id="server" title="Save or Open Online">
+      <!--<div id="server" title="Save or Open Online">
 	<div>Enter the filename and password to save or load with. You may leave the password blank.</div>
 	<div id="server-form-warning" class="ui-state-error ui-corner-all hide"></div>
 	<div id="server-form">
@@ -86,7 +81,7 @@
 	<div id="server-finished" class="hide server-message">
 	  <big><strong>Request Successful!</strong></big>
 	</div>
-      </div>
+      </div>-->
     </div>
   </body>
   
@@ -95,5 +90,6 @@
   <script>var staticPath = "{% static "" %}";</script>
   <script src="{% static "js/rangy/my-rangy.js" %}"></script>
   <script src="{% static "js/plugins.js" %}"></script>
+  <script src="{% static "js/spectrum.js" %}"></script>
   <script src="{% static "js/script.js" %}"></script>
 </html>

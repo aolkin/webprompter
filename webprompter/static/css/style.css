@@ -1,5 +1,4 @@
 #content {
-    font-size: 64px;
     margin-top: 30%;
     min-height: 60%;
     white-space: pre-wrap;
@@ -50,22 +49,20 @@ span.right.buttons {
 
 body {
     overflow-x: hidden;
-    background-color: #000;
-    color: #FFF;
     font-family: Sans-Serif;
-/*    overflow: hidden; */
+    margin: 0px;
 }
 
 @media print {
-    body {
+    html {
 	background-color: #FFF;
-	color: #000;
     }
     #content {
+	color: #000;
 	margin: 10px !important;
 	font-size: 0.95em !important;
     }
-    .message, .sensor {
+    .message, #toolbars {
 	display: none;
     }
 }
@@ -74,24 +71,12 @@ body {
     font-size: 0.8em;
 }
 
-.sensor {
-    cursor: auto;
-    width: 100%;
-    opacity: 1;
-    height: 120px;
-    position: fixed;
-    z-index: 999;
-    left: 0;
-}
-#toolbar-sensor { top: 0; }
-#rich-sensor { bottom: -10px; }
-
 #more-dialog button {
     width: 98%;
 }
 
 .left-buttons {
-    margin: 3 10px;
+    margin: 3px 10px;
 }
 
 .slider {
@@ -120,32 +105,47 @@ body {
     height: 19px;
 }
 
-.toolbar {
-    cursor: auto;
-    color: #000;
-    min-width: 800px;
-    width: 80%;
+#toolbars {
+    min-width: 768px;
+    width: 99%;
     position: fixed;
-    left: 10%;
-    height: 48px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px black;
-    background: -webkit-linear-gradient(top, rgba(255,255,255,1) 0%,
-					rgba(229,229,229,1) 100%);    
+    top: 0px; left: 0.5%;
 }
-#toolbar { top: 30px; }
-#rich { bottom: 30px; }
 
-.ui-dialog, .ui-widget-overlay {
-    cursor: auto !important;
+.toolbar {
+    display: inline-block;
+    width: 100%;
+    border-radius: 10px;
+    height: 48px;
+    margin-top: 1px;
+    background: -webkit-linear-gradient(top, rgba(255,255,255,1) 0%,
+					rgba(229,229,229,1) 100%);
+    box-shadow: 0 2px 10px black;
+}
+.toolbar:first-of-type {
+    margin-top: 0px;
+    border-radius: 0 0 10px 10px;
+}
+
+:-webkit-full-screen #toolbars { display: none; }
+:-moz-full-screen #toolbars { display: none; }
+.preview #toolbars { display: block; }
+
+#preview .ui-button-text:before { content: "Enter "; }
+.preview #preview .ui-button-text:before { content: "Leave "; }
+
+.toolbar select {
+    border-radius: 4px;
+    padding: 0.2em;
+    font-size: 1.15em;
 }
 
 #content p {
     margin: 0 !important;
 }
 
-@media (max-width: 1054px) {
-  /* rules that only apply for canvases narrower than 1000px */
+/*@media (max-width: 1054px) {
+  /* rules that only apply for canvases narrower than 1000px * /
     .toolbar {
 	min-width: 0;
 	width: 98%;
@@ -153,7 +153,7 @@ body {
 	font-size: 0.8em;
 	height: 41px;
     }
-}
+}*/
 
 .reset-formatting {
     font-weight: normal;
