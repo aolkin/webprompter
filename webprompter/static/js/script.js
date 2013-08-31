@@ -38,15 +38,15 @@ function Prompter() {
 	} catch (err) { }
     }
 
-    this.el = $("#content");
+    this.el = $("#content").html(this.text);
 
     this.isScrolling = false;
     document.addEventListener(fullscreenchange,this.fullscreenChange.bind(this));
 
     $(document).mousewheel((function(e,delta){
 	if (this.isScrolling) {
-	    d.speed += (delta+(delta>0?1:-1))/2;
-	    checkSpeed();
+	    this.speed += (delta+(delta>0?1:-1))/2;
+	    this.checkSpeed();
 	    e.preventDefault();
 	}
     }).bind(this));
@@ -84,143 +84,26 @@ function Prompter() {
 	    .appendTo("#font"); }
     this.changeFont();
 
+    $("#edit-margins").button().click(this.toggleMarginsEditable.bind(this));
+    this.updateMargins();
+
     $(".buttonset").buttonset();
 
-    //// CODE STILL NEEDS TO BE REFACTORED \/ \/ \/ ////
-
-    d = {};
-    d.speed = 10;
-    d.doScroll = 9;
-    d.playing = false;
-    d.intervals = {};
-
-    function setup(obj) {
-	localStorage.prompterEditable = obj.prompterEditable;
-	changeEditable();
-	if (obj.prompterText) {
-	    localStorage.prompterText = obj.prompterText;
-	    $("#content").html(obj.prompterText);
-	}
-	if (obj.prompterSpeed) {
-	    localStorage.prompterSpeed = obj.prompterSpeed;
-	    d.speed = Number(obj.prompterSpeed);
-	}
-	if (obj.prompterSize) {
-	    localStorage.prompterSize = obj.prompterSize;
-	    $("#content").css("fontSize",localStorage.prompterSize); }
-	    
-	storedMargins = [0,100];
-	if (obj.prompterMargins) {
-	    localStorage.prompterMargins = obj.prompterMargins;
-	    for (i=0;i<=1;i++) {
-		j = Number(localStorage.prompterMargins.split(" ")[i]);
-		if (!isNaN(j)) {
-		    storedMargins[i] = j;
-		}
-	    }
-	}
-	adjustMargins({}, {values: storedMargins});
-	$("#margin-slider").slider("option","values",storedMargins);
-    }		   
     $(window).resize(function(e){
-	if (d.dimensionsTimeout) {
-	    clearTimeout(d.dimensionsTimeout); }
-	$("#dimensions").clearQueue().html(innerWidth+" x "+innerHeight);
+	if (this.dimensionsTimeout) {
+	    clearTimeout(this.dimensionsTimeout); }
+	$("#dimensions").stop(true).html(innerWidth+" x "+innerHeight);
 	if ($("#dimensions").is(":visible")) {
 	    $("#dimensions").css({"opacity":1});
 	} else {
 	    $("#dimensions").fadeIn(200); }
-	d.dimensionsTimeout = setTimeout(function(){
+	this.dimensionsTimeout = setTimeout(function(){
 	    $("#dimensions").fadeOut(500);
 	},1000);
     });
-
-    //$("#disable-edits").get(0).checked = localStorage.prompterEditable == "0";
-    function changeEditable(){
-	$("#content").get(0).contentEditable = 
-	    (localStorage.prompterEditable=="0"?"false":"true");
-	$(document.body).css({ "overflow-y": 
-			       localStorage.prompterEditable=="0"?"hidden":"scroll"});
-	$("body, #rich-sensor, #content *").css({ "cursor": 
-			localStorage.prompterEditable=="0"?"url(Cursor.png)":"text"});
-	$("#content").css({ "webkitUserSelect": 
-			localStorage.prompterEditable=="0"?"none":""});
-    }
-
-    $("#help, #dimensions").mouseover(function(){
-	$(this).fadeOut();
-    });
-
-    function checkSpeed() {
-	negative = (d.speed<0)?true:false;
-	if (Math.abs(d.speed) > 19.5) {
-	    d.speed = 19.5*(negative?-1:1);
-	}
-	if (Math.abs(d.speed) < 6 && d.speed !== 0) {
-	    if (Math.abs(d.speed) <= 1) {
-		d.speed = 6*(negative?-1:1);
-	    } else {
-		d.speed = 0;
-	    }
-	}
-	localStorage.prompterSpeed = d.speed;
-    }
-
-    function testForDialogs() {
-	obj = [true];
-	$(".ui-dialog-content").each(function(index,el){
-	    if ($(el).dialog("isOpen")) { obj[0] = false; }
-	});
-	return obj[0];
-    }
     
-    $(document).keydown(function(e) {
-	if (!testForDialogs()) { return true; }
-	if ( (String.fromCharCode(e.which).toLowerCase() == "s" && e.ctrlKey)
-	     || e.which == 19 ) {
-	    $("#server").dialog("open");
-	    e.preventDefault(); return false;
-	}
-	if ( e.which == 18 || (e.altKey && !String.fromCharCode(e.which)) ) {
-	    $("#more-dialog").dialog("open");
-	    e.preventDefault(); return false;
-	}
-	if (e.which == 9) {
-	    e.preventDefault();
-	    $("#content").blur();
-	    return false;
-	}
-	if (document.activeElement == $("#content").get(0)) {
-	    return true; }
-	if (e.which == 38 || e.which == 40) {
-	    if (!d.playing) {
-		warn("The prompter is currently not scrolling...",1000);
-	    }
-	}
-	switch (e.which) {
-	case 38: // Up Arrow
-	    if (document.height-innerHeight == $(document).scrollTop() && d.speed !== 0) {
-		d.speed = 0; break; }
-	    d.speed += -1; break;
-	case 40: // Down Arrow
-	    if ($(document).scrollTop() == 0 && d.speed !== 0) {
-		d.speed = 0; break; }
-	    d.speed += 1; break;
-	case 32: // Space Key
-	    //if (!$("#more-dialog").dialog("isOpen")) {
-	    d.playing = !d.playing;
-	    if (d.playing && d.speed == 0) {
-		d.speed = 1;
-		checkSpeed();
-	    }
-	    break;
-	default:
-	    return true;
-	}
-	checkSpeed();
-	e.preventDefault();
-	return false;
-    });
+    $(document).keydown(this.handleKey.bind(this));
+    this.moveTextInterval = setInterval(this.scrollText.bind(this),1);
     
     rangy.init();
     resetApplier = rangy.createCssClassApplier("reset-formatting",
@@ -252,89 +135,52 @@ function Prompter() {
     });
     $("#text-style").buttonset();
 
-    function adjustMargins(e,ui) {
-	localStorage.prompterDirty = 1;
-	margins = {left: ui.values[0], right: 100-ui.values[1]};
-	localStorage.prompterMargins = margins.left+" "+(100-margins.right);
-	$("#content").clearQueue().css( {"marginLeft": margins.left+"%",
-					 "marginRight": margins.right+"%",
-					 "border": "1px dashed white",
-					 "paddingRight": 0,
-					 "overflow": "hidden" })
-	    .delay(1500)
-	    .animate({"borderColor": "transparent"},1000);
-	setTimeout(function(){ $("#toolbar").focus(); },500);
-    }
-
-    function moveText() {
-	if (d.playing && testForDialogs() && Math.abs(d.doScroll) > 1000 ) {
-	    d.abs = Math.abs(d.speed);
-	    scrollBy(0,( (d.speed<0)?-1:1) * (d.abs>10 ? d.abs%10:1) );
-	    d.doScroll = 0;
-	} else {
-	    d.doScroll += d.speed*d.speed*d.speed;
-	}
-    }
-
     function clearFormattingAndSave() {
 	$("#content [style]").removeAttr("style");
 	text = $("#content").html();
 	localStorage.prompterText = text;
     }
 
-    $("#content").keyup(function(e){
-	if (localStorage.prompterEditable !== "0") {
-	    localStorage.prompterDirty = 1;
-	    clearFormattingAndSave();
-	}
-    });
-
     $("#more").button({
 	icons: { primary: "ui-icon-disk" }
-    }).click(function(){
+    }).click(function() {
 	$("#more-dialog").dialog("open");
     });
 
+    dialogEffect = {effect:"drop",direction:"up",duration:500};
+    $("#more-dialog").dialog({
+	autoOpen: false, closeOnEscape: true,
+	modal: true, resizable: false, draggable: false,
+	show: dialogEffect, hide: dialogEffect,
+	position: {my:"center top+20", at:"center bottom", of:"#toolbars"},
+	zIndex: 100
+    });
     function closeMenu() {
 	$("#more-dialog").dialog("close"); }
-    menuButtons = ["ui-icon-document", "ui-icon-transferthick-e-w", "ui-icon-closethick"];
+    menuButtons = ["ui-icon-transferthick-e-w", "ui-icon-closethick"];
     menuActions = [
 	function(){
-	    if (localStorage.prompterDirty=="0" || confirm("Are you sure you want to clear the current script (without saving!) and create a new one?")) {
-		$("#content").html("");
-		if (d.playing) {
-		    $("#play-label").click(); }
-		$("#disable-edits").get(0).checked=false; $("#disable-edits").button("refresh");
-		localStorage.prompterEditable = 1;
-		changeEditable();
-		newMargins = [0,100];
-		$("#margin-slider").slider("values",newMargins);
-		adjustMargins({},{values:newMargins});
-		localStorage.prompterDirty=0;
-		closeMenu();
-		$("#content").focus();
-	    }
-	},
-	function(){
 	    closeMenu();
-	    $("#server").dialog("open");
+	    this.warn("Saving and loading is not possible yet!");
 	},
 	closeMenu ];
-    $("#more-dialog button").each( function(index,el) {
-	$(el).button({ icons: {primary: menuButtons[index]} }).click(menuActions[index]);
-    });
-    
-    setup(localStorage);
-    d.intervals.moveText = setInterval(moveText,1);
-/*window.onbeforeunload = function() {
-// only if presenting
-    return "Are you sure you want to leave the teleprompter? Your work will be saved when you return.";
-}*/
+    $("#more-dialog button").each( (function(index,el) {
+	$(el).button({ icons: {primary: menuButtons[index]} })
+	    .click(menuActions[index].bind(this));
+    }).bind(this) );
+
+    window.onbeforeunload = (function() {
+	if (this.isScrolling) {
+	    return "Are you sure you want to leave the teleprompter? Your work will be saved when you return."; }
+    }).bind(this);
 
 };
 
 Prompter.prototype = {
     startScrolling: function(preview) {
+	if (this.marginsEditable) { this.toggleMarginsEditable(); }
+	this.playing = false;
+	this.warn("");
 	if (preview === "preview") {
 	    if (document[isFullscreen]) {
 		document.cancelFullscreen();
@@ -343,7 +189,7 @@ Prompter.prototype = {
 	    }	    
 	} else {
 	    this.root.removeClass("preview");
-	    this.warn("Press &lt;Escape&gt; to stop prompting.");
+	    this.warn("Press &lt;Esc&gt; to stop prompting.");
 	}
 	this.root.get(0).requestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
     },
@@ -351,7 +197,14 @@ Prompter.prototype = {
 	this.isScrolling = document[isFullscreen];
 	this.el.prop("contentEditable",!this.isScrolling);
 	$(document.body).css("overflow-y",this.isScrolling?"hidden":"auto");
-	$("#text-style button").button("option","disabled",this.isScrolling);
+	this.root.css("cursor",this.isScrolling?
+		      "url("+staticPath+"img/cursor.png), crosshair":"text");
+	this.el.css({
+	    "webkitUserSelect": this.isScrolling?"none":"",
+	    "userSelect": this.isScrolling?"none":"",
+	    "mozUserSelect": this.isScrolling?"none":""
+	});
+	$("#text-style button,#more").button("option","disabled",this.isScrolling);
 	if (this.isScrolling) {
 	} else {
 	    this.root.removeClass("preview");
@@ -384,20 +237,131 @@ Prompter.prototype = {
 	this.font = $("#font").val();
 	this.save();
     },
+    toggleMarginsEditable: function(e) {
+	if (this.marginsEditable) {
+	    this.marginsEditable = false;
+	    $(".margin-handle").remove();
+	    $("#edit-margins").removeClass("working");
+	} else {
+	    this.warn("Drag the orange handles to adjust the margins.");
+	    this.marginsEditable = true;
+	    $("#edit-margins").addClass("working");
+	    for (i in {0:0,1:1}) {
+		$("<div>").appendTo("body").html("&nbsp;").addClass("margin-handle").css({
+		    position: "fixed",
+		    top: 0, width: 4,
+		    height: "100%",
+		    cursor: "w-resize",
+		    backgroundColor: "#ffaa00"
+		}).draggable({
+		    axis: "x",
+		    cursor: "w-resize",
+		    scroll: false,
+		    drag: (function(e,ui) {
+			percent = (ui.offset.left/(document.width))*100;
+			if ($(e.target).css("right") === "auto") {
+			    if (percent > 40 || percent < 0) {
+				e.preventDefault(); return false; }
+			    this.leftMargin = percent;
+			} else {
+			    if (percent < 60 || (document.width-4)-ui.offset.left < 0) {
+				e.preventDefault(); return false; }
+			    this.rightMargin = 100-percent;
+			}
+			this.updateMargins();
+		    }).bind(this)
+		});
+	    }
+	    $(".margin-handle").eq(0).css("left",this.leftMargin+"%");
+	    $(".margin-handle").eq(1).css("right",this.rightMargin+"%");
+	}
+    },
+    updateMargins: function() {
+	this.el.css({
+	    marginRight: this.rightMargin+"%",
+	    marginLeft: this.leftMargin+"%"
+	});
+	this.save();
+    },
+    checkSpeed: function() {
+	negative = (this.speed<0)?true:false;
+	if (Math.abs(this.speed) > 19.5) {
+	    this.speed = 19.5*(negative?-1:1);
+	}
+	if (Math.abs(this.speed) < 6 && this.speed !== 0) {
+	    if (Math.abs(this.speed) <= 1) {
+		this.speed = 6*(negative?-1:1);
+	    } else {
+		this.speed = 0;
+	    }
+	}
+	this.save();
+    },
     save: function() {
+	this.text = this.el.html();
 	localStorage.prompter = JSON.stringify(this,[
-	    "font","fontSize","textColor","bgColor"
+	    "font","fontSize","textColor","bgColor","leftMargin","rightMargin","speed","text"
 	]);
     },
     warn: function(msg,timeout) {
 	if (!timeout) { timeout = 2000; }
 	$("#warning").stop(true,true).html(msg).fadeIn(200).delay(timeout).fadeOut(500);
     },
+    handleKey: function(e) {
+	if (e.which == 9) {
+	    e.preventDefault();
+	    $("#content").blur();
+	    return false;
+	}
+	if (document.activeElement == $("#content").get(0)) {
+	    return true; }
+	if (e.which == 39) { e.which = 40; }
+	if (e.which == 37) { e.which = 38; }
+	if (e.which == 38 || e.which == 40) {
+	    if (this.isScrolling && !this.playing) {
+		this.warn("The prompter is currently not scrolling...",1000); }
+	}
+	switch (e.which) {
+	case 38: // Up Arrow
+	    if (document.height-innerHeight == $(document).scrollTop() && this.speed !== 0) {
+		this.speed = 0; break; }
+	    this.speed += -1; break;
+	case 40: // Down Arrow
+	    if ($(document).scrollTop() == 0 && this.speed !== 0) {
+		this.speed = 0; break; }
+	    this.speed += 1; break;
+	case 32: // Space Key
+	    this.playing = !this.playing;
+	    if (this.playing && this.speed == 0) {
+		this.speed = 1;
+		this.checkSpeed();
+	    }
+	    break;
+	default:
+	    return true;
+	}
+	this.checkSpeed();
+	e.preventDefault();
+	return false;
+    },
+    scrollText: function() {
+	if (this.isScrolling && this.playing && Math.abs(this.doScroll) > 1000 ) {
+	    this.abs = Math.abs(this.speed);
+	    scrollBy(0,( (this.speed<0)?-1:1) * (this.abs>10 ? this.abs%10:1) );
+	    this.doScroll = 0;
+	} else {
+	    this.doScroll += this.speed*this.speed*this.speed;
+	}
+    },
     root: $(document.documentElement),
     fontSize: "64px",
     font: fonts[0],
     textColor: "black",
-    bgColor: "white"
+    bgColor: "white",
+    leftMargin: 5,
+    rightMargin: 5,
+    marginsEditable: false,
+    doScroll: 0
 };
 
 $(function(){

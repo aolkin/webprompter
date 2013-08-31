@@ -27,8 +27,10 @@
 	  </span>
 
 	  <span class="right buttons">
-	    <button id="preview">Fullscreen</button>
-	    <button id="start">START</button>
+	    <span class="buttonset">
+	      <button id="preview">Fullscreen</button>
+	      <button id="start">START</button>
+	    </span>
 	  </span>
 	</div>
       </div>
@@ -42,7 +44,7 @@
 	    <button id="underline" title="Italic"><u>U</u></button>
 	  </span>
 	  <span class="right buttons">
-	    <button id="margin-button">Edit Margins</button>
+	    <button id="edit-margins">Margins</button>
 	    <button id="more" title="Open File Menu">Menu</button>
 	  </span>
 	</div>
@@ -51,37 +53,10 @@
     <div id="dimensions" class="message"></div>
     <div id="dialogs" class="hide">
       <div id="more-dialog" title="File Menu">
-	<button id="new-script">New Script</button>
 	<button id="save-server">Save to the Server</button>
-	<button id="load-server">Load from the Server</button>
+	<!--<button id="load-server">Load from the Server</button>-->
 	<button id="close-menu">Close</button>
       </div>
-      <!--<div id="server" title="Save or Open Online">
-	<div>Enter the filename and password to save or load with. You may leave the password blank.</div>
-	<div id="server-form-warning" class="ui-state-error ui-corner-all hide"></div>
-	<div id="server-form">
-	  <fieldset>
-	    <legend>Name</legend>
-	    <input name="name" id="filename" />
-	  </fieldset>
-	  <fieldset>
-	    <legend>Password</legend>
-	    <input name="password" id="password" type="password" />
-	  </fieldset>
-	  <fieldset class="hide" id="extra-password">
-	    <legend>Old Password</legend>
-	    Press save again to replace the existing file, unless you changed the password, in which case you need to input the old password here. If you are using the same password, you do not need to use this field.
-	    <input name="replace" id="replace-password" type="password" />
-	  </fieldset>
-	</div>
-	<div id="server-working" class="hide server-message">
-	  <img id="loading" alt="Loading..." src="{% static "img/loading.gif" %}" />
-	  Processing...
-	</div>
-	<div id="server-finished" class="hide server-message">
-	  <big><strong>Request Successful!</strong></big>
-	</div>
-      </div>-->
     </div>
   </body>
   

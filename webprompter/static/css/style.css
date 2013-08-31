@@ -26,7 +26,7 @@
 }
 
 #dimensions {
-    color: #64F;
+    color: #00D6FF;
     font-size: 1.5em;
     font-weight: bold;
     top: auto;
@@ -108,8 +108,10 @@ body {
 #toolbars {
     min-width: 768px;
     width: 99%;
+    z-index: 99;
     position: fixed;
     top: 0px; left: 0.5%;
+    cursor: auto !important;
 }
 
 .toolbar {
@@ -117,7 +119,7 @@ body {
     width: 100%;
     border-radius: 10px;
     height: 48px;
-    margin-top: 1px;
+    margin-top: 2px;
     background: -webkit-linear-gradient(top, rgba(255,255,255,1) 0%,
 					rgba(229,229,229,1) 100%);
     box-shadow: 0 2px 10px black;
@@ -132,7 +134,11 @@ body {
 .preview #toolbars { display: block; }
 
 #preview .ui-button-text:before { content: "Enter "; }
-.preview #preview .ui-button-text:before { content: "Leave "; }
+:-webkit-full-screen #preview .ui-button-text:before { content: "Leave "; }
+:-moz-full-screen #preview .ui-button-text:before { content: "Leave "; }
+
+#edit-margins:not(.working) .ui-button-text:before { content: "Adjust "; }
+#edit-margins.working .ui-button-text:before { content: "Done Adjusting "; }
 
 .toolbar select {
     border-radius: 4px;
