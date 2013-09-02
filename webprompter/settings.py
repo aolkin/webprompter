@@ -2,7 +2,7 @@
 
 import os
 
-DEBUG = True
+DEBUG = False if os.environ.get("PRODUCTION",0) > 0 else True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
