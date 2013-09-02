@@ -1,1 +1,1 @@
-web: gunicorn webprompter.wsgi
+web: ./manage.py collectstatic --noinput; gunicorn webprompter.wsgi
