@@ -48,7 +48,7 @@ USE_I18N = True
 USE_L10N = True
 
 # If you set this to False, Django will not use timezone-aware datetimes.
-USE_TZ = True
+USE_TZ = False
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/var/www/example.com/media/"
@@ -102,6 +102,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     # Uncomment the next line for simple clickjacking protection:
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'social_auth.middleware.SocialAuthExceptionMiddleware',
 )
 
 ROOT_URLCONF = 'webprompter.urls'
@@ -120,14 +121,45 @@ INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Uncomment the next line to enable the admin:
-    # 'django.contrib.admin',
-    # Uncomment the next line to enable admin documentation:
-    # 'django.contrib.admindocs',
+    'django.contrib.admin',
+    'social_auth',
+    'prompterscript',
 )
+
+AUTHENTICATION_BACKENDS = (
+    #'social_auth.backends.facebook.FacebookBackend',
+    'social_auth.backends.google.GoogleOAuth2Backend',
+)
+
+try:
+    GOOGLE_OAUTH2_CLIENT_ID = os.environ["CLIENT_ID"]
+    GOOGLE_OAUTH2_CLIENT_SECRET = os.environ["CLIENT_SECRET"]
+except KeyError:
+    import json
+    fd = open("client_secrets.json")
+    CLIENT_SECRETS = json.load(fd)
+    fd.close(); del fd
+    
+    GOOGLE_OAUTH2_CLIENT_ID = CLIENT_SECRETS["web"]["client_id"]
+    GOOGLE_OAUTH2_CLIENT_SECRET = CLIENT_SECRETS["web"]["client_secret"]
+
+SOCIAL_AUTH_PIPELINE = (
+    'social_auth.backends.pipeline.social.social_auth_user',
+    'social_auth.backends.pipeline.associate.associate_by_email',
+    'social_auth.backends.pipeline.user.get_username',
+    'social_auth.backends.pipeline.user.create_user',
+    'social_auth.backends.pipeline.social.associate_user',
+    'social_auth.backends.pipeline.social.load_extra_data',
+    'social_auth.backends.pipeline.user.update_user_details'
+)
+
+LOGIN_URL = "/login/google-oauth2/"
+LOGIN_ERROR_URL = "/auth-error/"
+LOGIN_REDIRECT_URL = "/authorized/"
+
+SOCIAL_AUTH_REVOKE_TOKENS_ON_DISCONNECT = True
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
@@ -159,10 +191,13 @@ LOGGING = {
 }
 # Parse database configuration from $DATABASE_URL
 import dj_database_url
-DATABASES['default'] =  dj_database_url.config()
+DATABASES['default'] =  dj_database_url.config(
+    default="sqlite:///db.sqlite")
 
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+USE_X_FORWARDED_HOST = True
 
 # Static asset configuration
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

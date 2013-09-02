@@ -7,14 +7,16 @@
   <head>
     <title>Teleprompter Web App</title>
     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/overcast/jquery-ui.css"/>
+    <link rel="stylesheet" href="{% static "css/tablesorter-blue/style.css" %}" />
     <link rel="stylesheet" href="{% static "css/spectrum.css" %}" />
     <link rel="stylesheet" href="{% static "css/style.css" %}" />
+    <link rel="shortcut icon" href="{% static "img/favicon.ico" %}">
  </head>
 
   <body>
     <div id="content" contenteditable="">Replace this content...</div>
     <div id="warning" class="message"></div>
-    <div id="toolbars">
+    <div id="toolbars" class="hide">
       <div id="toolbar" class="toolbar">
 	<div id="buttons" class="left-buttons">
 	  <span class="buttonset">
@@ -52,19 +54,57 @@
     </div>
     <div id="dimensions" class="message"></div>
     <div id="dialogs" class="hide">
-      <div id="more-dialog" title="File Menu">
-	<button id="save-server">Save to the Server</button>
-	<!--<button id="load-server">Load from the Server</button>-->
+      <div id="more-dialog" title="Menu">
+	<button id="new-script">New Script</button>
+	<button id="save">Save</button>
+	<button id="load">Load</button>
+	<button id="manage-autosaves" class="small" disabled="disabled">Manage Autosaves</button>
+	<button id="logout">Logout</button>
 	<button id="close-menu">Close</button>
+      </div>
+      <div id="server-dialog">
+	<input id="save-name" placeholder="Enter the script name here or choose one below:" />
+	<table class="tablesorter script-selection-table">
+	  <thead><tr>
+	      <th>Name</th>
+	      <th>Last Modified</th>
+	  </tr></thead>
+	  <tbody>
+	    <tr><td colspan="2">Loading...</td></tr>
+	  </tbody>
+	</table>
+	<div class="dialog-message"></div>
+      </div>
+      <div id="autosave-dialog" title="Manage Autosaves">
+	
+      </div>
+    </div>
+    <div id="splash-overlay" class="overlay-back overlay-opaque">
+      <div id="splash" class="overlay splash">
+	<img class="splash-logo" src="{% static "img/favicon.ico" %}" />
+	<div class="splash-title">WebPrompter</div>
+	<div class="splash-actions">
+	  <button id="splash-new" disabled="disabled" tabindex="3">New Script</button>
+	  <button id="splash-continue" disabled="disabled" tabindex="1">Continue...</button>
+	  <button id="splash-load" disabled="disabled"  tabindex="2">Load Script...</button>
+	</div>
+	<div class="splash-copy">&copy; 2013 Aaron Olkin</div>
       </div>
     </div>
   </body>
   
   <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
   <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
-  <script>var staticPath = "{% static "" %}";</script>
+  <script>
+    var staticPath = "{% static "" %}";
+    var isAuthenticated = {{ is_auth }};
+    var emailAddress = "{{ username }}";
+    var socialauthBegin = "{% url "socialauth_begin" "google-oauth2" %}";
+    var socialauthDisconnect = "{% url "socialauth_disconnect" "google-oauth2" %}";
+  </script>
   <script src="{% static "js/rangy/my-rangy.js" %}"></script>
   <script src="{% static "js/plugins.js" %}"></script>
+  <script src="{% static "js/jquery.tablesorter.min.js" %}"></script>
   <script src="{% static "js/spectrum.js" %}"></script>
   <script src="{% static "js/script.js" %}"></script>
 </html>

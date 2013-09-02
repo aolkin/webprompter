@@ -1,15 +1,22 @@
 from django.conf.urls import patterns, include, url
 
 # Uncomment the next two lines to enable the admin:
-# from django.contrib import admin
-# admin.autodiscover()
+from django.contrib import admin
+admin.autodiscover()
 
-urlpatterns = patterns('',
-    url(r'^$', 'webprompter.views.root', name='home'),
+from . import views
 
-    # Uncomment the admin/doc line below to enable admin documentation:
-    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+urlpatterns = patterns(
+    '',
+    url(r'^$', views.root),
 
-    # Uncomment the next line to enable the admin:
-    #url(r'^admin/', include(admin.site.urls)),
+    url(r'^authorized/', views.authorized),
+    url(r'^auth-error/', views.auth_error),
+
+    url(r'^save/', 'prompterscript.views.save'),
+    url(r'^load/(.*)?', 'prompterscript.views.load'),
+
+    url(r'', include('social_auth.urls')),
+
+    url(r'^admin/', include(admin.site.urls)),
 )

@@ -1,6 +1,12 @@
 
 *.zip
 
+# Testing database
+*.sqlite
+
+# They're SECRETS!
+client_secrets.json
+
 venv
 staticfiles
 

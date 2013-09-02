@@ -30,15 +30,20 @@ var fonts = [
     '"Lucida Console", Monaco, monospace'
 ];
 
-function Prompter() {
+function Prompter(fresh) {
 
+    $.extend(this,this.defaults);
     if (localStorage.prompter) {
 	try {
 	    $.extend(this,JSON.parse(localStorage.prompter));
 	} catch (err) { }
     }
+    if (fresh) {
+	this.autosave();
+	$.extend(this,this.defaults);
+    }
 
-    this.el = $("#content").html(this.text);
+    this.el = $("#content");
 
     this.isScrolling = false;
     document.addEventListener(fullscreenchange,this.fullscreenChange.bind(this));
@@ -68,7 +73,6 @@ function Prompter() {
 	localStorageKey: "prompterBGColorSelections",
 	move: this.setColor.bind(this,"bg")
     },colorOpts));
-    this.setColor();
 
     $("#size-plus").button({
 	icons: { "primary": "ui-icon-plusthick"  }
@@ -76,17 +80,15 @@ function Prompter() {
     $("#size-minus").button({
 	icons: { "primary": "ui-icon-minusthick"  }
     }).click(this.changeFontSize.bind(this,"-"));
-    this.changeFontSize();
 
     $("#font").change(this.changeFont.bind(this));
     for (i=0;i<fonts.length;i++) {
 	$("<option>").val(fonts[i]).text(fonts[i].split(",")[0].replace(/"/g,""))
 	    .appendTo("#font"); }
-    this.changeFont();
 
     $("#edit-margins").button().click(this.toggleMarginsEditable.bind(this));
-    this.updateMargins();
 
+    this.init();
     $(".buttonset").buttonset();
 
     $(window).resize(function(e){
@@ -104,7 +106,10 @@ function Prompter() {
     
     $(document).keydown(this.handleKey.bind(this));
     this.moveTextInterval = setInterval(this.scrollText.bind(this),1);
-    
+
+    $("#toolbars").removeClass("hide");
+
+/*    
     rangy.init();
     resetApplier = rangy.createCssClassApplier("reset-formatting",
 					       {normalize: true,
@@ -135,41 +140,98 @@ function Prompter() {
     });
     $("#text-style").buttonset();
 
-    function clearFormattingAndSave() {
+    function clearFormatting() {
 	$("#content [style]").removeAttr("style");
-	text = $("#content").html();
-	localStorage.prompterText = text;
     }
+*/
 
-    $("#more").button({
-	icons: { primary: "ui-icon-disk" }
-    }).click(function() {
+
+    $("#more").button({	icons: { primary: "ui-icon-gear" } }).click(function() {
 	$("#more-dialog").dialog("open");
     });
 
-    dialogEffect = {effect:"drop",direction:"up",duration:500};
-    $("#more-dialog").dialog({
+    var dialogEffect = {effect:"drop",direction:"up",duration:500};
+    var dialogOpts = {
 	autoOpen: false, closeOnEscape: true,
 	modal: true, resizable: false, draggable: false,
 	show: dialogEffect, hide: dialogEffect,
 	position: {my:"center top+20", at:"center bottom", of:"#toolbars"},
 	zIndex: 100
-    });
-    function closeMenu() {
-	$("#more-dialog").dialog("close"); }
-    menuButtons = ["ui-icon-transferthick-e-w", "ui-icon-closethick"];
-    menuActions = [
-	function(){
-	    closeMenu();
-	    this.warn("Saving and loading is not possible yet!");
+    };
+    this.serverDialog = $("#server-dialog").dialog($.extend({
+	minHeight: 400, minWidth: 600
+    },dialogOpts)).data("object",this);
+    $.tablesorter.addParser({
+	id: 'timestamp',
+	is: function(d) {
+	    return false; //(new Date(d).toString() != "Invalid Date");
 	},
-	closeMenu ];
+	format: function(d) {
+	    return new Date(d).getTime();
+	},
+	type: 'numeric'
+    });
+    $("#server-dialog table").tablesorter({
+	headers: { 1: {sorter: 'timestamp'} }
+    });
+    $("#save-name").on("keyup focus click",(function(t,e){
+	self = $(e.target);
+	val = self.val();
+	t.find("tbody>tr>td:first-child").each(function(index,el){
+	    if ($(this).text() === val) {
+		$(this).parent().addClass("selected selected-by-text-input");
+	    } else {
+		$(this).parent().removeClass("selected selected-by-text-input");
+	    }
+	});
+	return true;
+    }).bind(this,this.serverDialog.children("table")));
+
+    this.autosaveDialog = $("#autosave-dialog").dialog($.extend({
+	minHeight: 400, minWidth: 600,
+	buttons: {
+	    Close: function() { $("#autosave-dialog").dialog("close"); }
+	}
+    },dialogOpts));
+
+    $("#more-dialog").dialog(dialogOpts);
+    menuButtons = ["ui-icon-document","ui-icon-disk","ui-icon-folder-open",
+		   "ui-icon-clock","ui-icon-key","ui-icon-closethick"];
+    menuActions = [
+	function() {
+	    d = {}; $.extend(d,this.defaults);
+	    delete d.textColor; delete d.bgColor;
+	    this.init(d);
+	},
+	this.openServer.bind(this,"save"),
+	this.openServer.bind(this,"load"),
+	this.autosaveDialog.dialog.bind(this.autosaveDialog,"open"),
+	function() {
+	    if (this.authorizeIfNecessary()) {
+		deauth_w = open(socialauthDisconnect,'','height=600,width=500');
+		checkerFunc = (function() {
+		    if (deauth_w.closed) {
+			this.retextLogoutButton();
+		    } else {
+			setTimeout(checkerFunc,500);
+		    }
+		}).bind(this);
+		checkerFunc();
+	    }
+	}
+    ];
     $("#more-dialog button").each( (function(index,el) {
 	$(el).button({ icons: {primary: menuButtons[index]} })
-	    .click(menuActions[index].bind(this));
+	    .click((function(func,closeFunc){
+		closeFunc();
+		if (func) { func.call(this); }
+	    }).bind(this,menuActions[index],
+		    function(){ $("#more-dialog").dialog("close"); }));
     }).bind(this) );
+    this.retextLogoutButton();
 
     window.onbeforeunload = (function() {
+	this.save();
 	if (this.isScrolling) {
 	    return "Are you sure you want to leave the teleprompter? Your work will be saved when you return."; }
     }).bind(this);
@@ -177,6 +239,108 @@ function Prompter() {
 };
 
 Prompter.prototype = {
+    retextLogoutButton: function() {
+	$("#logout").button("option","label",isAuthenticated?"Logout":"Log In");
+    },
+    openServer: function(type) {
+	this.serverDialog.dialog("option",{
+	    dialogClass: "server-"+type+"-dialog",
+	    open: (function(e,ui) {
+		this.authorizeIfNecessary.call(this,"load",function(){
+		    $.getJSON("load/").success((function(data,status){
+			$("#server-dialog table tbody").empty();
+			for (i=0;i<data.length;i++) {
+			    $("<tr>").appendTo($("#server-dialog table tbody"))
+				.append($("<td>").text(data[i].name))
+				.append($("<td>").text(data[i].modified))
+				.click(function(e){
+				    $(this).parent().children("tr").removeClass(
+					"selected selected-by-text-input");
+				    $(this).addClass("selected");
+				});
+			}
+			$("#server-dialog table").trigger("update");
+			//$("#server-dialog table").trigger("sorton",[[1,0]]);
+		    }).bind(this)).error(function(status,error){
+			console.log(arguments);
+			alert("An error occured!");
+		    });
+		});
+	    }).bind(this),
+	    buttons: {
+		Cancel: function() { $(this).dialog("close"); },
+		"": function() {
+		    td = $(this).find(".selected td:first-child");
+		    if ($(this).is(".server-save-dialog")) {
+			$(this).dialog("close");
+		    } else {
+			$.getJSON("load/"+encodeURIComponent(td.text())).success((function(data){
+			    self = $(this).data("object");
+			    $(this).dialog("close");
+			    self.init(self.defaults);
+			    self.init(data,true);
+			}).bind(this)).error((function(xhr,error,err){
+			    $(this).children(".dialog-message").text('"'+error+'": '+
+								     err.message);
+			}).bind(this));
+		    }
+		}
+	    }
+	});
+	this.serverDialog.dialog("open");
+    },
+    authorizeIfNecessary: function(m,callback) {
+	if (isAuthenticated) {
+	    if (callback) { callback(); }
+	    return true;
+	}
+	overlay_back = $("<div>").addClass("overlay-back authorizer").appendTo("body");
+	overlay = $("<div>").addClass("overlay").appendTo(overlay_back);
+	extra = m?" to "+m+" scripts":""
+	$("<p>").text("Please sign in with Google"+extra+".").appendTo(overlay);
+	button_cont = $("<div>").appendTo(overlay);
+	$("<button>").text("Sign In").click((function(cb){
+	    if ($(this).data("win") && !$(this).data("win").closed) {
+		$(this).data("win").focus();
+	    } else {
+		w = open(socialauthBegin,'','height=600,width=500');
+		$(this).data("win",w);
+		checkerFunc = (function(w,callback){
+		    if (w.closed) {
+			if (isAuthenticated) {
+			    if (callback) { callback(); }
+			    $(".authorizer").remove(); }
+			this.retextLogoutButton();
+		    } else {
+			setTimeout(checkerFunc,1000);
+		    }
+		}).bind(this,w,cb);
+		checkerFunc();
+	    }
+	}).bind(this,callback)).button({icons:{primary:"ui-icon-extlink"}})
+	    .appendTo(button_cont);
+	$("<button>").text("Cancel").click((function(){
+	    if (this != window) {
+		$(this).dialog("close"); }
+	    $(".authorizer").remove();
+	}).bind(this)).button({icons:{primary:"ui-icon-close"}}).appendTo(button_cont);
+    },
+    init: function(obj,nosave) {
+	if (obj) {
+	    if (!nosave) { this.autosave(); }
+	    $.extend(this,obj);
+	}
+	this.el.html(this.text);
+	this.setColor();
+	this.changeFontSize();
+	this.changeFont();
+	this.updateMargins();
+    },
+    autosave: function() {
+	localStorage.prompterAutosaves = (localStorage.prompterAutosaves?
+					  localStorage.prompterAutosaves+"\\;"+
+					  localStorage.prompter:localStorage.prompter);
+    },
     startScrolling: function(preview) {
 	if (this.marginsEditable) { this.toggleMarginsEditable(); }
 	this.playing = false;
@@ -300,14 +464,20 @@ Prompter.prototype = {
     save: function() {
 	this.text = this.el.html();
 	localStorage.prompter = JSON.stringify(this,[
-	    "font","fontSize","textColor","bgColor","leftMargin","rightMargin","speed","text"
+	    "font","fontSize","textColor","bgColor","leftMargin","rightMargin","text"
 	]);
+	return JSON.stringify(this,["font","fontSize","textColor","bgColor","text"]);
     },
     warn: function(msg,timeout) {
 	if (!timeout) { timeout = 2000; }
 	$("#warning").stop(true,true).html(msg).fadeIn(200).delay(timeout).fadeOut(500);
     },
     handleKey: function(e) {
+	var dialogsAreOpen=false;
+	$(".ui-dialog-content").each(function(index,el){
+	    if ($(this).dialog("isOpen")) { dialogsAreOpen = true; }
+	});
+	if (dialogsAreOpen) { return true; }
 	if (e.which == 9) {
 	    e.preventDefault();
 	    $("#content").blur();
@@ -354,18 +524,47 @@ Prompter.prototype = {
 	}
     },
     root: $(document.documentElement),
-    fontSize: "64px",
-    font: fonts[0],
-    textColor: "black",
-    bgColor: "white",
+    defaults: {
+	fontSize: "64px",
+	font: fonts[0],
+	textColor: "black",
+	bgColor: "white",
+	text: "Type or paste your script here..."
+    },
     leftMargin: 5,
     rightMargin: 5,
     marginsEditable: false,
-    doScroll: 0
+    doScroll: 0,
+    speed: 6
 };
+
+var p;
 
 $(function(){
 
-    p = new Prompter();
+    function removeOverlay(o,time) {
+	if (!time) { time = 600; }
+	f = (function(){this.remove();}).bind(
+	    $(o).removeClass("overlay-opaque",time*(1/4)).fadeOut(time*(3/4)));
+	setTimeout(f,time+100);
+    }
+
+    $(".splash-actions button").prop("disabled",false);
+    if (!localStorage.prompter) {
+	$("#splash-continue").prop("disabled",true); }
+
+    $("#splash-continue").button().click(function(){
+	removeOverlay("#splash-overlay");
+	p = new Prompter();
+    });
+    $("#splash-new").button().click(function(){
+	removeOverlay("#splash-overlay");
+	p = new Prompter(true);
+    });
+    $("#splash-load").button().click(function(){
+	removeOverlay("#splash-overlay");
+	p = new Prompter();
+	p.openServer("load");
+    });
 
 });
