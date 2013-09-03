@@ -12,7 +12,9 @@ if (document.fullscreenEnabled) {
     var isFullscreen = "mozIsFullScreen";
     var fullscreenchange = "mozfullscreenchange";
 } else {
-    alert("Fullscreen APIs not present, please use a different browser or contact support.");
+    alert("Fullscreen APIs not present!\n\nYou will not be able to enter fullscreen "+
+	  "or prompt in this browser. Please use a different browser or contact "+
+	  "support.\n\nIf you are on mobile, just, STOP!");
 }
 
 var fonts = [
