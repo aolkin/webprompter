@@ -10,10 +10,15 @@ def jsonEncoder(obj):
     else:
         return obj
 
-def save(request):
+def save(request,name=""):
     if not request.user.is_authenticated():
         return HttpResponseForbidden()
-    return ""
+    if not name:
+        return HttpResponseBadRequest()
+    script = Script.objects.get_or_create(name=name,owner=request.user)[0]
+    script.contents = request.REQUEST["contents"]
+    script.save()
+    return HttpResponse('true',content_type="application/json")
 
 def load(request,name=None):
     if not request.user.is_authenticated():

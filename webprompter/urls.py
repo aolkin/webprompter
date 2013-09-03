@@ -13,7 +13,7 @@ urlpatterns = patterns(
     url(r'^authorized/', views.authorized),
     url(r'^auth-error/', views.auth_error),
 
-    url(r'^save/', 'prompterscript.views.save'),
+    url(r'^save/(.+)', 'prompterscript.views.save'),
     url(r'^load/(.+)?', 'prompterscript.views.load'),
 
     url(r'', include('social_auth.urls')),

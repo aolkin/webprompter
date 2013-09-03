@@ -245,10 +245,10 @@ Prompter.prototype = {
     openServer: function(type) {
 	this.serverDialog.dialog("option",{
 	    dialogClass: "server-"+type+"-dialog",
-	    open: (function(e,ui) {
-		this.authorizeIfNecessary.call(this,"load",function(){
+	    open: (function(type,e,ui) {
+		onAuthorize = function(type,self){
 		    $.getJSON("load/").success((function(data,status){
-			$("#server-dialog table tbody").empty();
+			$("#server-dialog table tbody").empty()
 			for (i=0;i<data.length;i++) {
 			    $("<tr>").appendTo($("#server-dialog table tbody"))
 				.append($("<td>").text(data[i].name))
@@ -257,32 +257,56 @@ Prompter.prototype = {
 				    $(this).parent().children("tr").removeClass(
 					"selected selected-by-text-input");
 				    $(this).addClass("selected");
+				    $("#save-name").val($(this).children("td:first-child")
+							.text());
 				});
 			}
 			$("#server-dialog table").trigger("update");
 			//$("#server-dialog table").trigger("sorton",[[1,0]]);
-		    }).bind(this)).error(function(status,error){
-			console.log(arguments);
-			alert("An error occured!");
-		    });
-		});
-	    }).bind(this),
+		    }).bind(this)).error((function(type,func,xhr,status,error){
+			if (error == "FORBIDDEN") {
+			    window.isAuthenticated = false;
+			    this.authorizeIfNecessary.call(this,type,func);
+			} else {
+			    console.log(arguments);
+			    alert("An error occured!");
+			}
+		    }).bind(this,type,self));
+		};
+		onAuthorize = onAuthorize.bind(this,type,onAuthorize);
+		$("#server-dialog table tbody").empty()
+		    .append('<tr><td colspan="2">Loading...</td></tr>');
+		$("#server-dialog .dialog-message").empty();
+		$("#save-name").val("");
+		this.authorizeIfNecessary.call(this,type,onAuthorize);
+	    }).bind(this,type),
 	    buttons: {
 		Cancel: function() { $(this).dialog("close"); },
 		"": function() {
 		    td = $(this).find(".selected td:first-child");
-		    if ($(this).is(".server-save-dialog")) {
-			$(this).dialog("close");
+		    errorFunc = (function(xhr,error,err) {
+			$(this).children(".dialog-message").text(error+': '+(err.message?
+									     err.message:err));
+		    }).bind(this);
+		    if ($(this).is(".server-save-dialog>div")) {
+			if (td.length > 0) {
+			    if (!confirm("Are you sure you want to overwrite that script?")) {
+				return false; } }
+			$.ajax("save/"+encodeURIComponent($("#save-name").val()),{
+			    dataType: "json",
+			    type: "POST",
+			    data: { contents: $(this).data("object").save() }
+			}).success((function(data){
+			    console.log(data);
+			    $(this).dialog("close");
+			}).bind(this)).error(errorFunc);
 		    } else {
 			$.getJSON("load/"+encodeURIComponent(td.text())).success((function(data){
 			    self = $(this).data("object");
 			    $(this).dialog("close");
 			    self.init(self.defaults);
 			    self.init(data,true);
-			}).bind(this)).error((function(xhr,error,err){
-			    $(this).children(".dialog-message").text('"'+error+'": '+
-								     err.message);
-			}).bind(this));
+			}).bind(this)).error(errorFunc);
 		    }
 		}
 	    }
@@ -320,8 +344,10 @@ Prompter.prototype = {
 	}).bind(this,callback)).button({icons:{primary:"ui-icon-extlink"}})
 	    .appendTo(button_cont);
 	$("<button>").text("Cancel").click((function(){
+	    if ($(this).data("win") && !$(this).data("win").closed) {
+		$(this).data("win").close(); }
 	    if (this != window) {
-		$(this).dialog("close"); }
+		$("#server-dialog").dialog("close"); }
 	    $(".authorizer").remove();
 	}).bind(this)).button({icons:{primary:"ui-icon-close"}}).appendTo(button_cont);
     },

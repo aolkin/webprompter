@@ -213,7 +213,7 @@ body {
     content: "Load";
 }
 .server-save-dialog .ui-dialog-buttonset button:last-of-type .ui-button-text:before {
-    content: "save";
+    content: "Save";
 }
 .server-load-dialog #save-name {
     display: none;
