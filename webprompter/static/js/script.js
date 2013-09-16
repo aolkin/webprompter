@@ -6,11 +6,16 @@ if (document.fullscreenEnabled) {
     document.cancelFullscreen = document.webkitCancelFullScreen;
     var isFullscreen = "webkitIsFullScreen";
     var fullscreenchange = "webkitfullscreenchange";
-} else if (document.mozFullscreenEnabled) {
-    Element.prototype.requestFullscreen = Element.prototype.mozRequestFullScreen;
-    document.cancelFullscreen = document.mozCancelFullScreen;
+} else if (document.webkitFullScreenEnabled) {
+    Element.prototype.requestFullscreen = Element.prototype.webkitRequestFullScreen;
+    document.cancelFullscreen = document.webkitCancelFullScreen;
+    var isFullscreen = "webkitIsFullScreen";
+    var fullscreenchange = "webkitfullscreenchange";
+} else if (document.mozFullScreenEnabled) {
+    Element.prototype.requestFullScreen = Element.prototype.mozRequestFullScreen;
+    document.cancelFullScreen = document.mozCancelFullScreen;
     var isFullscreen = "mozIsFullScreen";
-    var fullscreenchange = "mozfullscreenchange";
+    var fullscreenchange = "mozFullScreenchange";
 } else {
     alert("Fullscreen APIs not present!\n\nYou will not be able to enter fullscreen "+
 	  "or prompt in this browser. Please use a different browser or contact "+
@@ -111,7 +116,6 @@ function Prompter(fresh) {
 
     $("#toolbars").removeClass("hide");
 
-/*    
     rangy.init();
     resetApplier = rangy.createCssClassApplier("reset-formatting",
 					       {normalize: true,
@@ -145,8 +149,7 @@ function Prompter(fresh) {
     function clearFormatting() {
 	$("#content [style]").removeAttr("style");
     }
-*/
-
+    setInterval(clearFormatting,500);
 
     $("#more").button({	icons: { primary: "ui-icon-gear" } }).click(function() {
 	$("#more-dialog").dialog("open");
