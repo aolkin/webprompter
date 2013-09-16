@@ -132,23 +132,19 @@ function Prompter(fresh) {
     $("#bold").button().click( function(e){
 	resetApplier.applyToSelection();
 	boldApplier.toggleSelection();
-	clearFormattingAndSave();
     });
     $("#italic").button().click( function(e){
 	resetApplier.applyToSelection();
 	italicApplier.toggleSelection();
-	clearFormattingAndSave();
     });
     $("#underline").button().click( function(e){
 	resetApplier.applyToSelection();
 	underlineApplier.toggleSelection();
-	clearFormattingAndSave();
     });
     $("#text-style").buttonset();
 
     function clearFormatting() {
-	$("#content [style]").removeAttr("style");
-    }
+	$("#content [style]").removeAttr("style"); }
     setInterval(clearFormatting,400);
 
     $("#more").button({	icons: { primary: "ui-icon-gear" } }).click(function() {
