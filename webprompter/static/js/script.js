@@ -12,7 +12,7 @@ if (document.fullscreenEnabled) {
     var isFullscreen = "webkitIsFullScreen";
     var fullscreenchange = "webkitfullscreenchange";
 } else if (document.mozFullScreenEnabled) {
-    Element.prototype.requestFullScreen = Element.prototype.mozRequestFullScreen;
+    Element.prototype.requestFullscreen = Element.prototype.mozRequestFullScreen;
     document.cancelFullScreen = document.mozCancelFullScreen;
     var isFullscreen = "mozIsFullScreen";
     var fullscreenchange = "mozFullScreenchange";
@@ -149,7 +149,7 @@ function Prompter(fresh) {
     function clearFormatting() {
 	$("#content [style]").removeAttr("style");
     }
-    setInterval(clearFormatting,500);
+    setInterval(clearFormatting,400);
 
     $("#more").button({	icons: { primary: "ui-icon-gear" } }).click(function() {
 	$("#more-dialog").dialog("open");
