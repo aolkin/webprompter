@@ -291,7 +291,8 @@ Prompter.prototype = {
 		    }).bind(this);
 		    if ($(this).is(".server-save-dialog>div")) {
 			if (td.length > 0) {
-			    if (!confirm("Are you sure you want to overwrite that script?")) {
+			    if (!confirm("Are you sure you want to overwrite \""+
+					 $("#save-name").val()+"\"?")) {
 				return false; } }
 			$.ajax("save/"+encodeURIComponent($("#save-name").val()),{
 			    dataType: "json",
@@ -307,6 +308,7 @@ Prompter.prototype = {
 			    $(this).dialog("close");
 			    self.init(self.defaults);
 			    self.init(data,true);
+			    $("#save-name").val(td.text());
 			}).bind(this)).error(errorFunc);
 		    }
 		}
