@@ -278,7 +278,6 @@ Prompter.prototype = {
 		$("#server-dialog table tbody").empty()
 		    .append('<tr><td colspan="2">Loading...</td></tr>');
 		$("#server-dialog .dialog-message").empty();
-		$("#save-name").val("");
 		this.authorizeIfNecessary.call(this,type,onAuthorize);
 	    }).bind(this,type),
 	    buttons: {
