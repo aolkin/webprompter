@@ -234,12 +234,42 @@ table.tablesorter th:last-of-type {
 table.tablesorter tbody tr {
     cursor: pointer;
 }
-table.tablesorter tbody tr:not(.selected):hover td {
+table.tablesorter.script-selection-table tbody tr:not(.selected):hover td {
     background-color: #FFA;
 }
 table.tablesorter tbody tr.selected td {
     background-color: #FE9;
 }
+
+.autosave-table {
+    border-radius: 2px;
+    cursor: default;
+}
+.autosave-table button {
+    font-size: 0.8em;
+    cursor: button;
+}
+.autosave-table span {
+    font-size: 1.1em;
+    vertical-align: middle;
+}
+.autosave-table tr:first-child td:first-child {
+    border-radius: 4px 0 0 0;
+}
+.autosave-table tr:first-child td:last-child {
+    border-radius: 0 4px 0 0;
+}
+.autosave-table tr:last-child td:first-child {
+    border-radius: 0 0 0 4px;
+}
+.autosave-table tr:last-child td:last-child {
+    border-radius: 0 0 4px 0;
+}
+
+.autosave-table tr.selected {
+    background-color: #FFA;
+}
+
 
 .dialog-message {
     font-size: 1.1em;

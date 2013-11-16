@@ -56,7 +56,7 @@
 	<button id="new-script">New Script</button>
 	<button id="save">Save</button>
 	<button id="load">Load</button>
-	<button id="manage-autosaves" class="small" disabled="disabled">Manage Autosaves</button>
+	<button id="manage-autosaves">Autosaves</button>
 	<button id="logout">Logout</button>
 	<button id="close-menu">Close</button>
       </div>
@@ -74,7 +74,10 @@
 	<div class="dialog-message"></div>
       </div>
       <div id="autosave-dialog" title="Manage Autosaves">
-	
+	<table class="tablesorter autosave-table">
+	  <tbody>
+	  </tbody>
+	</table>
       </div>
     </div>
     <div id="splash-overlay" class="overlay-back overlay-opaque">

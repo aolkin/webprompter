@@ -188,11 +188,47 @@ function Prompter(fresh) {
 	return true;
     }).bind(this,this.serverDialog.children("table")));
 
+    function loadAutosave(e) {
+	var prompter = $(this).parents("tbody").data("prompter");
+	prompter.save();
+	prompter.init(self.defaults);
+	prompter.init(JSON.parse(localStorage.prompterAutosaves)[
+	    $(this).parents("tr").data("timestamp")],true);
+	$("#save-name").val("");
+	$(this).parents(".ui-dialog-content").dialog("close");
+    }
+    function deleteAutosave(e) {
+	$(this).parents("tr").addClass("selected");
+	if (confirm("Are you sure you want to delete that autosave?")) {
+	    var autosaves = JSON.parse(localStorage.prompterAutosaves);
+	    delete autosaves[$(this).parents("tr").data("timestamp")];
+	    $(this).parents("tr").remove();
+	    localStorage.prompterAutosaves = JSON.stringify(autosaves);
+	} else {
+	    $(this).parents("tr").removeClass("selected");
+	}
+    }
+
     this.autosaveDialog = $("#autosave-dialog").dialog($.extend({
 	minHeight: 400, minWidth: 600,
 	buttons: {
 	    Close: function() { $("#autosave-dialog").dialog("close"); }
-	}
+	},
+	open: (function(dialog) {
+	    var tbody = $(dialog).find("tbody");
+	    tbody.empty();
+	    tbody.data("prompter",this);
+	    for (i in JSON.parse(localStorage.prompterAutosaves)) {
+		var row = $("<tr>").appendTo(tbody).data("timestamp",i);
+		var d = new Date();
+		d.setTime(i);
+		$("<td>").appendTo(row).append($("<span>").text(d.toLocaleString()));
+		$("<td>").appendTo(row).append(
+		    $("<button>").text("Load").click(loadAutosave));
+		$("<td>").appendTo(row).append(
+		    $("<button>").text("Delete").click(deleteAutosave));
+	    }
+	}).bind(this,$("#autosave-dialog"))
     },dialogOpts));
 
     $("#more-dialog").dialog(dialogOpts);
@@ -365,9 +401,17 @@ Prompter.prototype = {
 	this.updateMargins();
     },
     autosave: function() {
-	localStorage.prompterAutosaves = (localStorage.prompterAutosaves?
-					  localStorage.prompterAutosaves+"\\;"+
-					  localStorage.prompter:localStorage.prompter);
+	var autosaves;
+	try {
+	    autosaves = JSON.parse(localStorage.prompterAutosaves);
+	} catch (e) {
+	    autosaves = {};
+	}
+	if (autosaves.length) {
+	    autosaves = {};
+	}
+	autosaves[new Date().getTime()] = JSON.parse(localStorage.prompter);
+	localStorage.prompterAutosaves = JSON.stringify(autosaves);
     },
     startScrolling: function(preview) {
 	if (this.marginsEditable) { this.toggleMarginsEditable(); }
