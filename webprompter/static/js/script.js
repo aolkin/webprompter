@@ -522,8 +522,9 @@ Prompter.prototype = {
     checkSpeed: function() {
 	negative = (this.speed<0)?true:false;
 	if (Math.abs(this.speed) > 19.5) {
-	    this.speed = 19.5*(negative?-1:1);
+	    this.speed = 20*(negative?-1:1);
 	}
+	var oldspeed = this.speed;
 	if (Math.abs(this.speed) < 6 && this.speed !== 0) {
 	    if (Math.abs(this.speed) <= 1) {
 		this.speed = 6*(negative?-1:1);
@@ -531,6 +532,7 @@ Prompter.prototype = {
 		this.speed = 0;
 	    }
 	}
+	console.log(oldspeed,this.speed);
 	this.save();
     },
     save: function() {
@@ -565,13 +567,21 @@ Prompter.prototype = {
 	}
 	switch (e.which) {
 	case 38: // Up Arrow
-	    if (document.height-innerHeight == $(document).scrollTop() && this.speed !== 0) {
-		this.speed = 0; break; }
-	    this.speed += -1; break;
+	    if ($(document).height()-innerHeight == $(document).scrollTop() && this.speed !== 0) {
+		//console.log(document.height,innerHeight,$(document).scrollTop(),this.speed);
+		this.speed = 0;
+		break;
+	    }
+	    this.speed += -1;
+	    break;
 	case 40: // Down Arrow
 	    if ($(document).scrollTop() == 0 && this.speed !== 0) {
-		this.speed = 0; break; }
-	    this.speed += 1; break;
+		//console.log($(document).scrollTop(),this.speed);
+		this.speed = 0;
+		break;
+	    }
+	    this.speed += 1;
+	    break;
 	case 32: // Space Key
 	    this.playing = !this.playing;
 	    if (this.playing && this.speed == 0) {
