@@ -525,9 +525,9 @@ Prompter.prototype = {
 	    this.speed = 20*(negative?-1:1);
 	}
 	var oldspeed = this.speed;
-	if (Math.abs(this.speed) < 6 && this.speed !== 0) {
+	if (Math.abs(this.speed) < 12 && this.speed !== 0) {
 	    if (Math.abs(this.speed) <= 1) {
-		this.speed = 6*(negative?-1:1);
+		this.speed = 12*(negative?-1:1);
 	    } else {
 		this.speed = 0;
 	    }
