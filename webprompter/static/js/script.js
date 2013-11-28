@@ -410,7 +410,9 @@ Prompter.prototype = {
 	if (autosaves.length) {
 	    autosaves = {};
 	}
-	autosaves[new Date().getTime()] = JSON.parse(localStorage.prompter);
+	try {
+	    autosaves[new Date().getTime()] = JSON.parse(localStorage.prompter);
+	} catch (e) { }
 	localStorage.prompterAutosaves = JSON.stringify(autosaves);
     },
     startScrolling: function(preview) {
