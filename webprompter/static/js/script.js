@@ -95,6 +95,10 @@ function Prompter(fresh) {
 
     $("#edit-margins").button().click(this.toggleMarginsEditable.bind(this));
 
+    $("#minimum-speed").change((function(e){
+	this.minimumSpeed = Number($("#minimum-speed").val());
+    }).bind(this));
+
     this.init();
     $(".buttonset").buttonset();
 
@@ -395,6 +399,7 @@ Prompter.prototype = {
 	    $.extend(this,obj);
 	}
 	this.el.html(this.text);
+	$("#minimum-speed").val(this.minimumSpeed);
 	this.setColor();
 	this.changeFontSize();
 	this.changeFont();
@@ -435,7 +440,7 @@ Prompter.prototype = {
 	this.isScrolling = document[isFullscreen];
 	this.el.prop("contentEditable",!this.isScrolling);
 	$(document.body).css("overflow-y",this.isScrolling?"hidden":"auto");
-	this.root.css("cursor",this.isScrolling?
+	this.root.css("cursor",(this.isScrolling&&!this.root.hasClass("preview"))?
 		      "url("+staticPath+"img/cursor.png), crosshair":"text");
 	this.el.css({
 	    "webkitUserSelect": this.isScrolling?"none":"",
@@ -444,6 +449,7 @@ Prompter.prototype = {
 	});
 	$("#text-style button,#more").button("option","disabled",this.isScrolling);
 	if (this.isScrolling) {
+	    this.warn("<big>Click on the text to enable scrolling!</big>");
 	} else {
 	    this.root.removeClass("preview");
 	}
@@ -522,14 +528,15 @@ Prompter.prototype = {
 	this.save();
     },
     checkSpeed: function() {
+	this.speed = Math.floor(this.speed);
 	negative = (this.speed<0)?true:false;
-	if (Math.abs(this.speed) > 19.5) {
-	    this.speed = 20*(negative?-1:1);
+	if (Math.abs(this.speed) > this.maximumSpeed-0.5) {
+	    this.speed = this.maximumSpeed*(negative?-1:1);
 	}
 	var oldspeed = this.speed;
-	if (Math.abs(this.speed) < 12 && this.speed !== 0) {
+	if (Math.abs(this.speed) < this.minimumSpeed && this.speed !== 0) {
 	    if (Math.abs(this.speed) <= 1) {
-		this.speed = 12*(negative?-1:1);
+		this.speed = this.minimumSpeed*(negative?-1:1);
 	    } else {
 		this.speed = 0;
 	    }
@@ -540,7 +547,8 @@ Prompter.prototype = {
     save: function() {
 	this.text = this.el.html();
 	localStorage.prompter = JSON.stringify(this,[
-	    "font","fontSize","textColor","bgColor","leftMargin","rightMargin","text"
+	    "font","fontSize","textColor","bgColor","leftMargin","rightMargin","text",
+	    "minimumSpeed","maximumSpeed"
 	]);
 	return JSON.stringify(this,["font","fontSize","textColor","bgColor","text"]);
     },
@@ -619,7 +627,9 @@ Prompter.prototype = {
     rightMargin: 5,
     marginsEditable: false,
     doScroll: 0,
-    speed: 6
+    speed: 8,
+    minimumSpeed: 6,
+    maximumSpeed: 19
 };
 
 var p;

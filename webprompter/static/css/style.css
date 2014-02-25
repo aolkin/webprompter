@@ -275,3 +275,16 @@ table.tablesorter tbody tr.selected td {
     font-size: 1.1em;
     font-style: italic;
 }
+
+#minimum-speed-label {
+    width: 184px;
+    margin: auto;
+    display: block;
+    margin-top: 1em;
+}
+
+#minimum-speed {
+    width: 3em;
+    border-radius: 4px;
+    padding: 3px;
+}
