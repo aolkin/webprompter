@@ -104,7 +104,8 @@ body {
 	background-color: #FFF;
     }
     #content {
-	color: #000;
+	color: #000 !important;
+	background-color: #FFF !important;
 	margin: 10px !important;
 	font-size: 0.95em !important;
     }
